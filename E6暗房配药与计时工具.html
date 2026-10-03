@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拓海家暗房冲洗套药小工具</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0a'/><circle cx='50' cy='50' r='32' fill='none' stroke='%23ff9d3f' stroke-width='6'/><line x1='50' y1='50' x2='50' y2='28' stroke='%23ff9d3f' stroke-width='5' stroke-linecap='round'/><circle cx='50' cy='50' r='4' fill='%23ff9d3f'/></svg>">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0a0a; --card: #141414; --card-hover: #1a1a1a;
+  --border: #262626; --border-light: #333;
+  --text: #ece4d4; --text-dim: #9a9080; --text-faint: #5a5448;
+  --accent: #ff9d3f; --accent-bright: #ffb866;
+  --accent-dim: rgba(255,157,63,0.12); --accent-glow: rgba(255,157,63,0.35);
+  --running: #ffb866; --done: #4ade80; --warn: #ef4444;
+  --radius: 12px; --radius-sm: 8px;
+}
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
+
+.header { text-align: center; padding: 32px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.header .brand { font-size: 0.8rem; letter-spacing: 4px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+.header h1 { font-size: 1.7rem; font-weight: 700; color: var(--text); letter-spacing: 2px; margin-bottom: 6px; }
+.header .subtitle { font-size: 0.9rem; color: var(--text-dim); }
+
+.recipe-switcher { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 28px; }
+.switcher-group {
+  display: inline-flex; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden; flex-wrap: wrap; justify-content: center;
+}
+.switcher-group button {
+  padding: 12px 22px; background: transparent; border: none; color: var(--text-dim);
+  font-size: 0.88rem; cursor: pointer; transition: all 0.15s; font-family: inherit; font-weight: 500;
+  letter-spacing: 1px; border-right: 1px solid var(--border);
+}
+.switcher-group button:last-child { border-right: none; }
+.switcher-group button.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+
+.section-title {
+  display: flex; align-items: center; gap: 12px; margin: 32px 0 18px;
+  font-size: 1.15rem; font-weight: 600; color: var(--text);
+}
+.section-title .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%; background: var(--accent-dim);
+  color: var(--accent); font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+}
+.section-title .line { flex: 1; height: 1px; background: var(--border); }
+
+.calc-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; margin-bottom: 16px;
+}
+.calc-input-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.calc-input-row label { font-size: 0.9rem; color: var(--text-dim); white-space: nowrap; }
+.calc-input-row .input-wrap { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
+.calc-input-row input {
+  width: 100%; padding: 12px 48px 12px 16px; background: var(--bg); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 1.1rem; font-weight: 600;
+  outline: none; transition: border-color 0.2s; font-family: inherit;
+}
+.calc-input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.calc-input-row .unit { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 0.9rem; }
+.quick-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.quick-btns button {
+  padding: 8px 14px; background: var(--bg); border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+  color: var(--text-dim); font-size: 0.82rem; cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.quick-btns button:hover { border-color: var(--accent); color: var(--accent); }
+
+.chem-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.chem-table thead th {
+  text-align: left; padding: 10px 12px; background: var(--bg); color: var(--text-dim);
+  font-weight: 500; font-size: 0.8rem; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.chem-table tbody td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.chem-table tbody tr:last-child td { border-bottom: none; }
+.chem-table tbody tr:hover { background: var(--card-hover); }
+.chem-name { font-weight: 600; color: var(--text); }
+.chem-en { font-size: 0.75rem; color: var(--text-faint); margin-left: 6px; }
+.chem-amount { font-weight: 700; color: var(--accent-bright); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chem-water { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chem-note { font-size: 0.78rem; color: var(--text-faint); line-height: 1.4; }
+.chem-dual { display: flex; flex-direction: column; gap: 2px; }
+.chem-dual .a { color: var(--accent-bright); font-weight: 600; }
+.chem-dual .b { color: var(--accent); font-weight: 600; opacity: 0.85; }
+
+.step-list { display: flex; flex-direction: column; gap: 10px; }
+.step-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px; display: grid; grid-template-columns: 44px 1fr auto; gap: 16px;
+  align-items: center; transition: all 0.2s; position: relative; overflow: hidden;
+}
+.step-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--border); transition: background 0.2s;
+}
+.step-card.running { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-dim); }
+.step-card.running::before { background: var(--accent); }
+.step-card.done { opacity: 0.6; }
+.step-card.done::before { background: var(--done); }
+.step-card.done .step-time-display { color: var(--done); }
+.step-num {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%; background: var(--bg);
+  border: 1px solid var(--border-light); color: var(--text-dim);
+  font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+}
+.step-card.running .step-num { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.step-card.done .step-num { border-color: var(--done); color: var(--done); background: rgba(74,222,128,0.1); }
+.step-info { min-width: 0; }
+.step-name { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.step-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-dim); }
+.step-meta .temp { color: var(--accent); font-weight: 500; }
+.step-note-text { font-size: 0.78rem; color: var(--text-faint); margin-top: 4px; line-height: 1.4; }
+.step-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.step-time-display {
+  font-size: 1.5rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums;
+  min-width: 72px; text-align: center; letter-spacing: 1px;
+}
+.step-card.running .step-time-display { color: var(--running); text-shadow: 0 0 12px var(--accent-glow); }
+.step-btns { display: flex; gap: 6px; }
+.step-btns button {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-light);
+  background: var(--bg); color: var(--text-dim); cursor: pointer; display: flex;
+  align-items: center; justify-content: center; transition: all 0.15s;
+}
+.step-btns button:hover { border-color: var(--accent); color: var(--accent); }
+.step-btns button.play-btn.running-state { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.step-btns button svg { width: 16px; height: 16px; fill: currentColor; }
+.step-progress {
+  position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent);
+  width: 0%; transition: width 0.3s linear; opacity: 0;
+}
+.step-card.running .step-progress { opacity: 1; }
+
+.global-controls {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px; margin-top: 20px; flex-wrap: wrap;
+}
+.global-controls .info { font-size: 0.85rem; color: var(--text-dim); }
+.global-controls .info strong { color: var(--accent); font-weight: 600; }
+.global-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-primary {
+  padding: 12px 24px; background: var(--accent); border: none; border-radius: var(--radius-sm);
+  color: #0a0a0a; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  font-family: inherit; letter-spacing: 1px;
+}
+.btn-primary:hover { background: var(--accent-bright); transform: translateY(-1px); }
+.btn-secondary {
+  padding: 12px 20px; background: var(--bg); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); color: var(--text-dim); font-size: 0.88rem;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+.master-timer {
+  text-align: center; padding: 20px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 16px; display: none;
+}
+.master-timer.active { display: block; }
+.master-timer .label { font-size: 0.8rem; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; }
+.master-timer .time { font-size: 3rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 3px; text-shadow: 0 0 20px var(--accent-glow); }
+.master-timer .step-name-large { font-size: 1.1rem; color: var(--text); margin-top: 4px; font-weight: 500; }
+
+.sound-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; font-size: 0.82rem; color: var(--text-dim); }
+.sound-toggle input { accent-color: var(--accent); }
+
+.footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; }
+.footer p { font-size: 0.78rem; color: var(--text-faint); line-height: 1.8; }
+.footer .warn-text { color: var(--warn); font-weight: 500; }
+
+@media (max-width: 640px) {
+  .container { padding: 16px 14px 40px; }
+  .header h1 { font-size: 1.3rem; }
+  .switcher-group button { padding: 10px 14px; font-size: 0.8rem; }
+  .step-card { grid-template-columns: 36px 1fr; grid-template-rows: auto auto; gap: 10px; padding: 14px 16px; }
+  .step-right { grid-column: 1 / -1; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 10px; }
+  .step-time-display { font-size: 1.3rem; }
+  .chem-table { font-size: 0.8rem; }
+  .chem-table thead th, .chem-table tbody td { padding: 8px 6px; }
+  .calc-card { padding: 16px; }
+  .master-timer .time { font-size: 2.2rem; }
+  .global-controls { flex-direction: column; align-items: stretch; }
+  .global-btns { justify-content: center; }
+}
+
+@keyframes flash {
+  0%, 100% { background: var(--card); }
+  50% { background: var(--accent-dim); }
+}
+.step-card.flashing { animation: flash 0.5s ease-in-out 6; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="brand">Takumi Home Darkroom</div>
+    <h1>拓海家暗房冲洗套药小工具</h1>
+    <p class="subtitle">配药比例计算 · 工艺流程倒计时</p>
+  </header>
+
+  <div class="recipe-switcher">
+    <div class="switcher-group" id="recipeSwitcher">
+      <button class="active" data-recipe="basic">E6 基础版</button>
+      <button data-recipe="colormax">colormax E-6</button>
+      <button data-recipe="seven">E6 七步版</button>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="num">1</span><span>工作液配药计算器</span><span class="line"></span>
+  </div>
+
+  <div class="calc-card">
+    <div class="calc-input-row">
+      <label for="totalVolume">工作液总量</label>
+      <div class="input-wrap">
+        <input type="number" id="totalVolume" value="1000" min="100" step="50" inputmode="numeric">
+        <span class="unit">ml</span>
+      </div>
+      <div class="quick-btns">
+        <button data-v="500">500ml</button>
+        <button data-v="1000">1L</button>
+        <button data-v="2000">2L</button>
+        <button data-v="5000">5L</button>
+      </div>
+    </div>
+    <table class="chem-table">
+      <colgroup><col style="width:22%"><col style="width:28%"><col style="width:22%"><col style="width:28%"></colgroup>
+      <thead><tr><th>药水</th><th>原液用量</th><th>加水量</th><th>配比说明</th></tr></thead>
+      <tbody id="chemBody"></tbody>
+    </table>
+  </div>
+
+  <div class="section-title">
+    <span class="num">2</span><span>工艺流程与倒计时</span><span class="line"></span>
+  </div>
+
+  <div class="master-timer" id="masterTimer">
+    <div class="label">当前步骤</div>
+    <div class="time" id="masterTime">06:15</div>
+    <div class="step-name-large" id="masterStepName">首显</div>
+  </div>
+
+  <div class="step-list" id="stepList"></div>
+
+  <div class="global-controls">
+    <div class="info">
+      <span>预计总时长：<strong id="totalDuration">—</strong></span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <label class="sound-toggle">
+        <input type="checkbox" id="soundToggle" checked>
+        <span>完成提示音（循环15秒）</span>
+      </label>
+    </div>
+    <div class="global-btns">
+      <button class="btn-secondary" id="resetAllBtn">全部重置</button>
+      <button class="btn-primary" id="startAllBtn">一键开始全流程</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>
+      <span class="warn-text">安全须知：</span>胶卷药水多含毒性，使用期间请佩戴手套、护目镜，确保通风。<br>
+      首显、彩显液如混入一滴其他药水即需报废。药水请避光常温保存。<br>
+      数据来源：拓海家暗房 Takumi Home Darkroom E-6 系列配方说明书
+    </p>
+  </footer>
+
+</div>
+
+<script>
+/* ================================================================
+   拓海家暗房冲洗套药小工具
+   三配方：E6基础版 / colormax E-6 / E6七步版
+   ================================================================ */
+
+// ---------- 配药数据 ----------
+const CHEMISTRY_DATA = {
+  // E6 基础版（漂定合一，5药水）
+  basic: [
+    { id:'fd',  name:'首显液', en:'FD',  type:'single', ratio:0.2,
+      note:'1+4，400ml水 + 100ml浓缩液 = 500ml；须先配置完密封，防彩显液污染' },
+    { id:'cd',  name:'彩显液', en:'CD',  type:'dual', ratioA:0.10, ratioB:0.04,
+      note:'430ml水 + 50ml A液 + 20ml B液 = 500ml；配置需精准，偏差会改变色彩平衡' },
+    { id:'ct',  name:'调整液', en:'CT',  type:'single', ratio:0.04,
+      note:'480ml水 + 20ml浓缩液 = 500ml' },
+    { id:'bx',  name:'漂定液', en:'BX',  type:'dual', ratioA:0.20, ratioB:0.20,
+      note:'300ml水 + 100ml A液 + 100ml B液 = 500ml' },
+    { id:'stab', name:'稳定液', en:'STAB', type:'single', ratio:0.01,
+      note:'980ml水 + 10ml浓缩液 = 1000ml；可重复使用直至此套药用完' },
+  ],
+  // colormax E-6（漂定合一，5药水）
+  colormax: [
+    { id:'fd',  name:'首显液', en:'FD',  type:'single', ratio:0.2,
+      note:'1+4，part1；须先配置完密封，防彩显液污染' },
+    { id:'cd',  name:'彩显液', en:'CD',  type:'dual', ratioA:0.20, ratioB:0.20,
+      note:'3:1:1，300ml水 + 100ml part1 + 100ml part2 = 500ml；配置需精准' },
+    { id:'ct',  name:'调整液', en:'CT',  type:'single', ratio:0.2,
+      note:'1+4，part1' },
+    { id:'bx',  name:'漂定液', en:'BX',  type:'dual', ratioA:0.20, ratioB:0.20,
+      note:'3:1:1，300ml水 + 100ml part1 + 100ml part2 = 500ml' },
+    { id:'stab', name:'稳定液', en:'STAB', type:'single', ratio:0.2,
+      note:'1+4，part1' },
+  ],
+  // E6 七步版（反转/漂白/定影分开，7药水）
+  seven: [
+    { id:'fd',  name:'首显液', en:'FD',  type:'single', ratio:0.2,
+      note:'1+4，浓缩液+水；请先加水再放入浓缩液' },
+    { id:'rv',  name:'反转液', en:'RV',  type:'single', ratio:0.025,
+      note:'1+39，浓缩液+水；首显液必须先配置，以防污染' },
+    { id:'cd',  name:'彩显液', en:'CD',  type:'dual', ratioA:0.2, ratioB:0.05,
+      note:'4A+1B+15，A液+B液+水；彩显配置需精准，很小偏差会改变色彩平衡' },
+    { id:'pb',  name:'预漂液', en:'PB',  type:'single', ratio:0.5,
+      note:'1+1，浓缩液+水' },
+    { id:'bl',  name:'漂白液', en:'BL',  type:'single', ratio:0.5,
+      note:'1+1，浓缩液+水；如需复用漂白后清水洗' },
+    { id:'fx',  name:'定影液', en:'FX',  type:'single', ratio:0.5,
+      note:'1+1，浓缩液+水' },
+    { id:'stab', name:'稳定液', en:'STAB', type:'single', ratio:0.02,
+      note:'1+49，浓缩液+水；可一次性配置重复使用' },
+  ]
+};
+
+// ---------- 工艺流程数据（秒） ----------
+const STEPS_DATA = {
+  basic: [
+    { id:0, name:'预热',   duration:900, temp:'38℃',
+      note:'15分钟预热，75转/分钟；可适当延长' },
+    { id:1, name:'首显',   duration:375, temp:'38±0.5℃',
+      note:'6分15秒，转速75/分钟' },
+    { id:2, name:'水洗',   duration:240, temp:'38±0.5℃',
+      note:'4分钟，每次1分钟换水重复四次，使用蒸馏或纯净水' },
+    { id:3, name:'彩显',   duration:300, temp:'38±0.5℃',
+      note:'5分钟' },
+    { id:4, name:'调整',   duration:120, temp:'35±5℃',
+      note:'2分钟' },
+    { id:5, name:'漂定',   duration:480, temp:'35±5℃',
+      note:'8分钟' },
+    { id:6, name:'水洗',   duration:240, temp:'25–40℃',
+      note:'4分钟，可增加水洗次数直至水不发红' },
+    { id:7, name:'稳定',   duration:60,  temp:'25–40℃',
+      note:'1分钟，罐外泡稳定，移除片芯用其他容器' },
+  ],
+  colormax: [
+    { id:0, name:'预热',   duration:300, temp:'38±0.2℃',
+      note:'5分，可适当延长' },
+    { id:1, name:'首显',   duration:375, temp:'38±0.2℃',
+      note:'6分15秒，转速75/分钟' },
+    { id:2, name:'水洗',   duration:240, temp:'38±0.2℃',
+      note:'4分，多次换水或流动水可适当延长' },
+    { id:3, name:'彩显',   duration:300, temp:'38±0.2℃',
+      note:'5分' },
+    { id:4, name:'调整',   duration:120, temp:'38±0.2℃',
+      note:'2分' },
+    { id:5, name:'漂定',   duration:480, temp:'38±0.2℃',
+      note:'8分' },
+    { id:6, name:'水洗',   duration:240, temp:'36±3℃',
+      note:'4分，可适当延长' },
+    { id:7, name:'稳定',   duration:60,  temp:'20–25℃',
+      note:'1分，移除片芯用其他容器泡稳定' },
+  ],
+  seven: [
+    { id:0, name:'预热',   duration:300, temp:'38±0.1℃',
+      note:'5分至少，可适当延长，确保暖罐彻底' },
+    { id:1, name:'首显',   duration:360, temp:'38±0.1℃',
+      note:'6分钟；首显需要药液纯净度时间精准' },
+    { id:2, name:'水洗①',  duration:240, temp:'38±0.1℃',
+      note:'4分；多次换水或流动水可适当延长' },
+    { id:3, name:'反转',   duration:120, temp:'38±0.2℃',
+      note:'2分；确保水洗水温正确' },
+    { id:4, name:'彩显',   duration:300, temp:'38±0.2℃',
+      note:'5分钟' },
+    { id:5, name:'预漂',   duration:120, temp:'38±0.2℃',
+      note:'2分钟' },
+    { id:6, name:'漂白',   duration:360, temp:'36±3℃',
+      note:'6分钟；如需复用漂白后清水洗' },
+    { id:7, name:'定影',   duration:240, temp:'36±3℃',
+      note:'4分钟' },
+    { id:8, name:'水洗②',  duration:240, temp:'36±3℃',
+      note:'4分钟；多次换水或流动水可适当延长' },
+    { id:9, name:'稳定',   duration:30,  temp:'20–25℃',
+      note:'30秒；移除片芯用其他容器泡稳定' },
+  ]
+};
+
+// ---------- 状态 ----------
+let currentRecipe = 'basic';
+let runningStepId = null;
+let countdownInterval = null;
+let autoRun = false;
+let soundEnabled = true;
+let finishSoundInterval = null;
+let finishSoundTimeout = null;
+
+function getChemistry() { return CHEMISTRY_DATA[currentRecipe]; }
+function getSteps() { return STEPS_DATA[currentRecipe]; }
+
+let stepRemaining = {};
+function initRemaining() {
+  stepRemaining = {};
+  getSteps().forEach(s => { stepRemaining[s.id] = s.duration; });
+}
+initRemaining();
+
+function fmtTime(sec) {
+  sec = Math.max(0, Math.round(sec));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function getStepDuration(stepId) {
+  const s = getSteps().find(x => x.id === stepId);
+  return s ? s.duration : 0;
+}
+
+// ---------- 提示音（循环15秒） ----------
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function beep(freq, duration, delay) {
+  if (!soundEnabled || !audioCtx) return;
+  const t = audioCtx.currentTime + (delay || 0);
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(0.35, t + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(t); osc.stop(t + duration + 0.05);
+}
+function playBeepSequence() {
+  beep(880, 0.2, 0);
+  beep(880, 0.2, 0.28);
+  beep(1175, 0.4, 0.56);
+}
+function startFinishSound() {
+  if (!soundEnabled) return;
+  ensureAudio();
+  stopFinishSound();
+  playBeepSequence();
+  finishSoundInterval = setInterval(playBeepSequence, 1200);
+  finishSoundTimeout = setTimeout(stopFinishSound, 15000);
+}
+function stopFinishSound() {
+  if (finishSoundInterval) { clearInterval(finishSoundInterval); finishSoundInterval = null; }
+  if (finishSoundTimeout) { clearTimeout(finishSoundTimeout); finishSoundTimeout = null; }
+}
+
+// ================================================================
+// 配药计算器
+// ================================================================
+function renderChemTable() {
+  const total = parseFloat(document.getElementById('totalVolume').value) || 0;
+  const tbody = document.getElementById('chemBody');
+  tbody.innerHTML = '';
+  getChemistry().forEach(c => {
+    const tr = document.createElement('tr');
+    let concHtml = '', waterHtml = '';
+    if (c.type === 'single') {
+      const conc = total * c.ratio;
+      concHtml = `<span class="chem-amount">${conc.toFixed(1)} ml</span>`;
+      waterHtml = `<span class="chem-water">${(total - conc).toFixed(1)} ml</span>`;
+    } else if (c.type === 'dual') {
+      const a = total * c.ratioA, b = total * c.ratioB;
+      concHtml = `<div class="chem-dual"><span class="a">A液：${a.toFixed(1)} ml</span><span class="b">B液：${b.toFixed(1)} ml</span></div>`;
+      waterHtml = `<span class="chem-water">${(total - a - b).toFixed(1)} ml</span>`;
+    }
+    tr.innerHTML = `<td><span class="chem-name">${c.name}</span><span class="chem-en">${c.en}</span></td><td>${concHtml}</td><td>${waterHtml}</td><td class="chem-note">${c.note}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('totalVolume').addEventListener('input', renderChemTable);
+document.querySelectorAll('.quick-btns button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('totalVolume').value = btn.dataset.v;
+    renderChemTable();
+  });
+});
+
+// ================================================================
+// 工艺流程
+// ================================================================
+const playIcon = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+const pauseIcon = '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+const resetIcon = '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
+
+function renderSteps() {
+  const list = document.getElementById('stepList');
+  list.innerHTML = '';
+  getSteps().forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'step-card';
+    card.id = 'step-' + s.id;
+    card.innerHTML = `
+      <div class="step-num">${s.id}</div>
+      <div class="step-info">
+        <div class="step-name">${s.name}</div>
+        <div class="step-meta"><span class="temp">${s.temp}</span><span>标准 ${fmtTime(s.duration)}</span></div>
+        ${s.note ? `<div class="step-note-text">${s.note}</div>` : ''}
+      </div>
+      <div class="step-right">
+        <div class="step-time-display" id="time-${s.id}">${fmtTime(stepRemaining[s.id] || s.duration)}</div>
+        <div class="step-btns">
+          <button class="play-btn" id="play-${s.id}" title="开始/暂停">${playIcon}</button>
+          <button class="reset-btn" id="reset-${s.id}" title="重置">${resetIcon}</button>
+        </div>
+      </div>
+      <div class="step-progress" id="progress-${s.id}"></div>`;
+    list.appendChild(card);
+    document.getElementById('play-' + s.id).addEventListener('click', () => toggleStep(s.id));
+    document.getElementById('reset-' + s.id).addEventListener('click', () => resetStep(s.id));
+  });
+  updateTotalDuration();
+}
+
+function updateTotalDuration() {
+  const total = getSteps().reduce((sum, s) => sum + s.duration, 0);
+  const min = Math.floor(total / 60), sec = total % 60;
+  document.getElementById('totalDuration').textContent = sec > 0 ? `${min}分${sec}秒` : `${min}分钟`;
+}
+
+function toggleStep(stepId) {
+  ensureAudio();
+  if (runningStepId === stepId) { pauseCountdown(); }
+  else { if (runningStepId !== null) pauseCountdown(); startCountdown(stepId); }
+}
+
+function startCountdown(stepId) {
+  runningStepId = stepId;
+  autoRun = false;
+  stopFinishSound();
+  if (stepRemaining[stepId] === undefined || stepRemaining[stepId] <= 0) {
+    stepRemaining[stepId] = getStepDuration(stepId);
+  }
+  const card = document.getElementById('step-' + stepId);
+  const playBtn = document.getElementById('play-' + stepId);
+  card.classList.add('running');
+  card.classList.remove('done', 'flashing');
+  playBtn.innerHTML = pauseIcon;
+  playBtn.classList.add('running-state');
+  const s = getSteps().find(x => x.id === stepId);
+  document.getElementById('masterTimer').classList.add('active');
+  document.getElementById('masterStepName').textContent = s.name;
+  document.getElementById('masterTime').textContent = fmtTime(stepRemaining[stepId]);
+  countdownInterval = setInterval(() => {
+    stepRemaining[stepId]--;
+    if (stepRemaining[stepId] <= 0) {
+      stepRemaining[stepId] = 0;
+      updateStepDisplay(stepId);
+      finishStep(stepId);
+      return;
+    }
+    updateStepDisplay(stepId);
+  }, 1000);
+}
+
+function pauseCountdown() {
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  if (runningStepId !== null) {
+    const card = document.getElementById('step-' + runningStepId);
+    const playBtn = document.getElementById('play-' + runningStepId);
+    card.classList.remove('running');
+    playBtn.innerHTML = playIcon;
+    playBtn.classList.remove('running-state');
+  }
+  runningStepId = null;
+}
+
+function finishStep(stepId) {
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  const card = document.getElementById('step-' + stepId);
+  const playBtn = document.getElementById('play-' + stepId);
+  card.classList.remove('running');
+  card.classList.add('done', 'flashing');
+  playBtn.innerHTML = playIcon;
+  playBtn.classList.remove('running-state');
+  runningStepId = null;
+  startFinishSound();
+  setTimeout(() => { card.classList.remove('flashing'); }, 3000);
+  if (autoRun) {
+    const nextId = stepId + 1;
+    if (nextId < getSteps().length) {
+      setTimeout(() => { if (autoRun) startCountdown(nextId); }, 1500);
+    } else {
+      autoRun = false;
+      document.getElementById('startAllBtn').textContent = '一键开始全流程';
+    }
+  }
+}
+
+function resetStep(stepId) {
+  if (runningStepId === stepId) pauseCountdown();
+  stepRemaining[stepId] = getStepDuration(stepId);
+  const card = document.getElementById('step-' + stepId);
+  if (card) {
+    card.classList.remove('done', 'running', 'flashing');
+    const playBtn = document.getElementById('play-' + stepId);
+    playBtn.innerHTML = playIcon;
+    playBtn.classList.remove('running-state');
+  }
+  updateStepDisplay(stepId);
+}
+
+function updateStepDisplay(stepId) {
+  const el = document.getElementById('time-' + stepId);
+  if (el) el.textContent = fmtTime(stepRemaining[stepId]);
+  const mt = document.getElementById('masterTime');
+  if (mt) mt.textContent = fmtTime(stepRemaining[stepId]);
+  const total = getStepDuration(stepId);
+  const pct = total > 0 ? ((total - stepRemaining[stepId]) / total * 100) : 0;
+  const prog = document.getElementById('progress-' + stepId);
+  if (prog) prog.style.width = pct + '%';
+}
+
+document.getElementById('startAllBtn').addEventListener('click', () => {
+  ensureAudio();
+  if (autoRun) {
+    autoRun = false;
+    pauseCountdown();
+    document.getElementById('startAllBtn').textContent = '一键开始全流程';
+    return;
+  }
+  let startId = 0;
+  const steps = getSteps();
+  for (let i = 0; i < steps.length; i++) {
+    const card = document.getElementById('step-' + i);
+    if (!card || !card.classList.contains('done') || (stepRemaining[i] !== undefined && stepRemaining[i] < getStepDuration(i))) {
+      startId = i; break;
+    }
+  }
+  autoRun = true;
+  document.getElementById('startAllBtn').textContent = '停止全流程';
+  startCountdown(startId);
+});
+
+document.getElementById('resetAllBtn').addEventListener('click', () => {
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  runningStepId = null;
+  autoRun = false;
+  stopFinishSound();
+  document.getElementById('startAllBtn').textContent = '一键开始全流程';
+  document.getElementById('masterTimer').classList.remove('active');
+  getSteps().forEach(s => resetStep(s.id));
+});
+
+// ---------- 配方切换 ----------
+document.querySelectorAll('#recipeSwitcher button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#recipeSwitcher button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRecipe = btn.dataset.recipe;
+    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+    runningStepId = null;
+    autoRun = false;
+    stopFinishSound();
+    document.getElementById('startAllBtn').textContent = '一键开始全流程';
+    document.getElementById('masterTimer').classList.remove('active');
+    initRemaining();
+    renderChemTable();
+    renderSteps();
+  });
+});
+
+document.getElementById('soundToggle').addEventListener('change', (e) => {
+  soundEnabled = e.target.checked;
+  if (!soundEnabled) stopFinishSound();
+  else ensureAudio();
+});
+
+// 初始化
+renderChemTable();
+renderSteps();
+</script>
+</body>
+</html>
